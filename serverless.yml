@@ -1,0 +1,41 @@
+service: aspera-request-clone
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.8
+  memorySize: 128
+  timeout: 10
+  versionFunctions: false #function versioning
+  stage: dev
+  profile: inhyo # 개인 계정 profile
+  region: ap-northeast-2
+  stackName: lambda-app-aspera-request-clone
+  logRetentionInDays: 30
+  deploymentBucket: 
+    name: s3-aspera-request-clone-deploy-bucket
+    maxPreviousDeploymentArtifacts: 5
+    tags: 
+      Name: s3-aspera-request-clone-deploy-bucket
+      Owner: henry
+  deploymentPrefix: serverless
+
+functions:
+  postS3EventToEC2:
+    handler: handler.post_s3_event_to_ec2
+    name: lambda-aspera-request-clone
+    description: Request to run test server bash script
+    role: arn:aws:iam::963897741994:role/iam-role-lambda-aspera-request-clone
+    environment: 
+      INSTANCE_ID: "i-025e735880199d7c4"
+    tags: 
+      Name: postS3EventToEC2
+      Owner: henry
+      Service: ${self:service}
+      Env: ${self:provider.stage}
+    events: 
+      - s3: 
+          bucket: s3-aspera-request-clone-event-bucket
+          event: s3:ObjectCreated:*
+          existing: true
